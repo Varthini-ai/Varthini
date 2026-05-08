@@ -1,0 +1,16 @@
+# cook your dish here
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    # Read X, Y, and Z
+    x, y, z = map(int, input().split())
+    
+    # Calculate total students
+    total_students = x * y
+    
+    # Compare 2*Z with total_students to check if Z > 50%
+    if 2 * z > total_students:
+        print("YES")
+    else:
+        print("NO")
