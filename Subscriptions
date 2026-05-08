@@ -1,0 +1,29 @@
+# cook your dish here
+import math
+
+def solve():
+    # Read N and X from input
+    try:
+        N, X = map(int, input().split())
+    except EOFError:
+        return
+    except ValueError:
+        return
+
+    # Calculate the number of subscriptions needed using the ceiling function
+    # math.ceil(N / 6)
+    num_subscriptions = math.ceil(N / 6)
+    
+    # Calculate the total cost
+    total_cost = int(num_subscriptions) * X
+    
+    print(total_cost)
+
+# Read number of test cases
+try:
+    T = int(input())
+except:
+    T = 0
+
+for _ in range(T):
+    solve()
