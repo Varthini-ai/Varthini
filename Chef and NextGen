@@ -1,0 +1,12 @@
+# Read the number of test cases
+T = int(input())
+
+for _ in range(T):
+    # Read A, B, X, Y from a single line
+    A, B, X, Y = map(int, input().split())
+    
+    # Calculate required vs available power
+    if X * Y >= A * B:
+        print("Yes")
+    else:
+        print("No")
