@@ -1,0 +1,13 @@
+# cook your dish here
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    # Read X (total) and Y (approved)
+    x, y = map(int, input().split())
+    
+    # Check if Y is at least 50% of X using the inequality 2Y >= X
+    if 2 * y >= x:
+        print("YES")
+    else:
+        print("NO")
