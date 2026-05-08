@@ -1,0 +1,15 @@
+# cook your dish here
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    # Read X and Y from a single line
+    x, y = map(int, input().split())
+    
+    # Constant time comparison
+    if x < y:
+        print("BIKE")
+    elif x > y:
+        print("CAR")
+    else:
+        print("SAME")
