@@ -1,0 +1,10 @@
+#Solution as follows
+
+t = int(input())
+for i in range(t):
+    X, Y, Z = map(int,input().split())
+    #Y people move out of the town
+    total_population = X - Y
+    #Logical error in this line. 'Z' people immigrated to this town - so its population will increase
+    total_population = total_population + Z
+    print(total_population)
