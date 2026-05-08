@@ -1,0 +1,17 @@
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    s = input() # Hidden word
+    t_guess = input() # Guess word
+    
+    result = ""
+    # Loop through each index from 0 to 4
+    for i in range(5):
+        if s[i] == t_guess[i]:
+            result += 'G'
+        else:
+            result += 'B'
+            
+    # Print the resulting pattern for the test case
+    print(result)
