@@ -1,0 +1,16 @@
+# cook your dish here
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    n = int(input())  # Length of string
+    s = input()       # The binary string
+    
+    count = 0
+    # Iterate through the string up to the second to last character
+    for i in range(n - 1):
+        # If current character is same as the next, we need an operation
+        if s[i] == s[i+1]:
+            count += 1
+            
+    print(count)
