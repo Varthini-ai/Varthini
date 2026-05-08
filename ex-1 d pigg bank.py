@@ -1,0 +1,6 @@
+a=int(input("enter the value:"))
+b=int(input("enter the value:"))
+c=int(input("enter the value:"))
+d=int(input("enter the value:"))
+e=(a*10)+(b*5)+(c*2)+(d*1)
+print("the total value is:",e)
