@@ -1,0 +1,8 @@
+# Read the number of test cases
+T = int(input())
+
+for _ in range(T):
+    # Read the number of glasses
+    N = int(input())
+    # Profit per glass is 15, so total profit is 15 * N
+    print(15 * N)
