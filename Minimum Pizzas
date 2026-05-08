@@ -1,0 +1,13 @@
+# cook your dish here
+import sys
+
+# Read the number of test cases
+t = int(sys.stdin.readline())
+
+for _ in range(t):
+    n, x = map(int, sys.stdin.readline().split())
+    total_slices = n * x
+    
+    # Using the ceiling division formula: (numerator + denominator - 1) // denominator
+    ans = (total_slices + 3) // 4
+    print(ans)
