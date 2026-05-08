@@ -1,0 +1,14 @@
+t = int(input())
+
+for _ in range(t):
+    # Store profits in a list to easily calculate max and sum
+    profits = list(map(int, input().split()))
+    
+    m = max(profits)
+    total_sum = sum(profits)
+    
+    # Check the condition 2 * max > sum
+    if 2 * m > total_sum:
+        print("YES")
+    else:
+        print("NO")
