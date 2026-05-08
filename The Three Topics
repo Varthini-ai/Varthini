@@ -1,0 +1,18 @@
+# Reading the four integers
+a, b, c, x = map(int, input().split())
+
+# We check for membership in a collection.
+# This operation is O(1) because the list size is fixed at 3.
+if x in {a, b, c}:
+    print("Yes")
+else:
+    print("No")# cook your dish here
+# Reading the four integers
+a, b, c, x = map(int, input().split())
+
+# We check for membership in a collection.
+# This operation is O(1) because the list size is fixed at 3.
+if x in {a, b, c}:
+    print("Yes")
+else:
+    print("No")
