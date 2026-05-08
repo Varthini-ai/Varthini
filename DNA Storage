@@ -1,0 +1,24 @@
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    n = int(input())
+    s = input()
+    
+    result = []
+    # Loop through the string with a step of 2
+    for i in range(0, n, 2):
+        pair = s[i:i+2]
+        
+        # Map the pair to the corresponding DNA character
+        if pair == "00":
+            result.append("A")
+        elif pair == "01":
+            result.append("T")
+        elif pair == "10":
+            result.append("C")
+        elif pair == "11":
+            result.append("G")
+            
+    # Join the list into a single string and print it
+    print("".join(result))
