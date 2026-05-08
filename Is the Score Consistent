@@ -1,0 +1,15 @@
+# cook your dish here
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    # Read initial score A:B
+    a, b = map(int, input().split())
+    # Read final score C:D
+    c, d = map(int, input().split())
+    
+    # Check if both teams' scores are non-decreasing
+    if a <= c and b <= d:
+        print("POSSIBLE")
+    else:
+        print("IMPOSSIBLE")
