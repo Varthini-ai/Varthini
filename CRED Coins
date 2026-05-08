@@ -1,0 +1,16 @@
+# cook your dish here
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    # Read X and Y
+    x, y = map(int, input().split())
+    
+    # Total coins earned
+    total_coins = x * y
+    
+    # Calculate max bags using floor division
+    max_bags = total_coins // 100
+    
+    # Print the result
+    print(max_bags)
