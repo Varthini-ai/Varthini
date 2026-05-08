@@ -1,0 +1,15 @@
+# cook your dish here
+import math
+
+t = int(input())
+for _ in range(t):
+    n, x = map(int, input().split())
+    
+    # If Chef already has enough, he needs 0 packets.
+    if x >= n:
+        print(0)
+    else:
+        # Calculate how many more candies are needed
+        needed = n - x
+        # Use ceil to round up (e.g., 5/4 becomes 1.25, ceil makes it 2)
+        print(math.ceil(needed / 4))
