@@ -1,0 +1,15 @@
+# cook your dish here
+# Read the number of test cases
+t = int(input())
+
+for _ in range(t):
+    # Read the status of the three bottles
+    b1, b2, b3 = map(int, input().split())
+    
+    # Calculate the number of full bottles
+    # If the sum of empty bottles (where value is 0) 
+    # is >= 2, then the sum of full bottles must be <= 1.
+    if b1 + b2 + b3 <= 1:
+        print("Water filling time")
+    else:
+        print("Not now")
