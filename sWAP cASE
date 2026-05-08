@@ -1,0 +1,3 @@
+def swap_case(s):
+    # Use the built-in string method for swapping cases
+    return s.swapcase()
