@@ -1,0 +1,7 @@
+# Solution as follows
+
+t = int(input())        
+for i in range(t):      
+    s = input()   
+    x = s + s          
+    print(x)
