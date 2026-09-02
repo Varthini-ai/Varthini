@@ -1,0 +1,118 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <math.h>
+
+#define HASH_SIZE 2047 // Size of our hash map table
+
+// Node structure for our bucket hash map
+typedef struct HashNode {
+    long long bucket_id;
+    long long value;
+    struct HashNode* next;
+} HashNode;
+
+// Helper to calculate the bucket ID safely, handling negative numbers
+long long getBucketId(long long val, long long width) {
+    return val < 0 ? (val + 1) / width - 1 : val / width;
+}
+
+// Custom Hash Map implementation for bucket tracking
+unsigned int hashFunction(long long bucket_id) {
+    unsigned int hash = (unsigned int)(bucket_id ^ (bucket_id >> 32));
+    return hash % HASH_SIZE;
+}
+
+void insertBucket(HashNode** table, long long bucket_id, long long value) {
+    unsigned int slot = hashFunction(bucket_id);
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    newNode->bucket_id = bucket_id;
+    newNode->value = value;
+    newNode->next = table[slot];
+    table[slot] = newNode;
+}
+
+bool searchBucket(HashNode** table, long long bucket_id, long long* outputVal) {
+    unsigned int slot = hashFunction(bucket_id);
+    HashNode* curr = table[slot];
+    while (curr) {
+        if (curr->bucket_id == bucket_id) {
+            *outputVal = curr->value;
+            return true;
+        }
+        curr = curr->next;
+    }
+    return false;
+}
+
+void removeBucket(HashNode** table, long long bucket_id) {
+    unsigned int slot = hashFunction(bucket_id);
+    HashNode* curr = table[slot];
+    HashNode* prev = NULL;
+    while (curr) {
+        if (curr->bucket_id == bucket_id) {
+            if (prev) {
+                prev->next = curr->next;
+            } else {
+                table[slot] = curr->next;
+            }
+            free(curr);
+            return;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+}
+
+void freeTable(HashNode** table) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = table[i];
+        while (curr) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+        table[i] = NULL;
+    }
+}
+
+bool containsNearbyAlmostDuplicate(int* nums, int numsSize, int indexDiff, int valueDiff) {
+    HashNode* hashTable[HASH_SIZE] = {NULL};
+    long long width = (long long)valueDiff + 1;
+
+    for (int i = 0; i < numsSize; i++) {
+        long long val = nums[i];
+        long long bucket_id = getBucketId(val, width);
+        long long checkVal;
+
+        // Condition 1: Check if the exact same bucket already contains a number
+        if (searchBucket(hashTable, bucket_id, &checkVal)) {
+            freeTable(hashTable);
+            return true;
+        }
+
+        // Condition 2: Check the left adjacent bucket
+        if (searchBucket(hashTable, bucket_id - 1, &checkVal) && llabs(val - checkVal) <= valueDiff) {
+            freeTable(hashTable);
+            return true;
+        }
+
+        // Condition 3: Check the right adjacent bucket
+        if (searchBucket(hashTable, bucket_id + 1, &checkVal) && llabs(val - checkVal) <= valueDiff) {
+            freeTable(hashTable);
+            return true;
+        }
+
+        // Insert current value into its bucket
+        insertBucket(hashTable, bucket_id, val);
+
+        // Keep the sliding window size within bounds of indexDiff
+        if (i >= indexDiff) {
+            long long old_bucket_id = getBucketId(nums[i - indexDiff], width);
+            removeBucket(hashTable, old_bucket_id);
+        }
+    }
+
+    freeTable(hashTable);
+    return false;
+}
