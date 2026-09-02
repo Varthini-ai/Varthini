@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+// Helper macro to find min and max
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+int maximumGap(int* nums, int numsSize) {
+    if (numsSize < 2) return 0;
+
+    // Step 1: Find the global minimum and maximum values
+    int min_val = INT_MAX;
+    int max_val = INT_MIN;
+    for (int i = 0; i < numsSize; i++) {
+        min_val = MIN(min_val, nums[i]);
+        max_val = MAX(max_val, nums[i]);
+    }
+
+    // If all elements are identical, the maximum gap is 0
+    if (min_val == max_val) return 0;
+
+    // Step 2: Calculate bucket size and count
+    // Bucket size must be at least 1
+    int bucket_size = MAX(1, (max_val - min_val) / (numsSize - 1));
+    int bucket_count = (max_val - min_val) / bucket_size + 1;
+
+    // Allocate tracking arrays for bucket minimums and maximums
+    int* bucket_min = (int*)malloc(bucket_count * sizeof(int));
+    int* bucket_max = (int*)malloc(bucket_count * sizeof(int));
+    int* bucket_empty = (int*)malloc(bucket_count * sizeof(int));
+
+    for (int i = 0; i < bucket_count; i++) {
+        bucket_min[i] = INT_MAX;
+        bucket_max[i] = INT_MIN;
+        bucket_empty[i] = 1; // Mark all buckets as empty initially
+    }
+
+    // Step 3: Map each number to its corresponding bucket
+    for (int i = 0; i < numsSize; i++) {
+        int idx = (nums[i] - min_val) / bucket_size;
+        bucket_min[idx] = MIN(bucket_min[idx], nums[i]);
+        bucket_max[idx] = MAX(bucket_max[idx], nums[i]);
+        bucket_empty[idx] = 0; // Mark bucket as non-empty
+    }
+
+    // Step 4: Calculate the maximum gap between consecutive non-empty buckets
+    int max_gap = 0;
+    int prev_max = min_val; // Initialize with the first element's lower bound
+
+    for (int i = 0; i < bucket_count; i++) {
+        if (bucket_empty[i]) continue; // Skip empty buckets
+
+        // Gap is the difference between current bucket's min and previous bucket's max
+        max_gap = MAX(max_gap, bucket_min[i] - prev_max);
+        prev_max = bucket_max[i];
+    }
+
+    // Clean up allocated memory
+    free(bucket_min);
+    free(bucket_max);
+    free(bucket_empty);
+
+    return max_gap;
+}
