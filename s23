@@ -1,0 +1,123 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Structure to define a standard Heap
+typedef struct {
+    int* data;
+    int size;
+    int capacity;
+    int isMinHeap; // 1 for Min-Heap, 0 for Max-Heap
+} Heap;
+
+Heap* createHeap(int capacity, int isMinHeap) {
+    Heap* h = (Heap*)malloc(sizeof(Heap));
+    h->data = (int*)malloc(capacity * sizeof(int));
+    h->size = 0;
+    h->capacity = capacity;
+    h->isMinHeap = isMinHeap;
+    return h;
+}
+
+void swap(int* a, int* b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Compare function based on heap type
+int compare(Heap* h, int child, int parent) {
+    if (h->isMinHeap) {
+        return h->data[child] < h->data[parent];
+    } else {
+        return h->data[child] > h->data[parent];
+    }
+}
+
+void pushHeap(Heap* h, int val) {
+    h->data[h->size] = val;
+    int curr = h->size;
+    h->size++;
+    
+    // Bubble up
+    while (curr > 0) {
+        int parent = (curr - 1) / 2;
+        if (compare(h, curr, parent)) {
+            swap(&h->data[curr], &h->data[parent]);
+            curr = parent;
+        } else {
+            break;
+        }
+    }
+}
+
+int popHeap(Heap* h) {
+    int topVal = h->data[0];
+    h->size--;
+    h->data[0] = h->data[h->size];
+    
+    int curr = 0;
+    // Bubble down
+    while (2 * curr + 1 < h->size) {
+        int left = 2 * curr + 1;
+        int right = 2 * curr + 2;
+        int target = left;
+        
+        if (right < h->size && compare(h, right, left)) {
+            target = right;
+        }
+        
+        if (compare(h, target, curr)) {
+            swap(&h->data[curr], &h->data[target]);
+            curr = target;
+        } else {
+            break;
+        }
+    }
+    return topVal;
+}
+
+// Define the MedianFinder Object Wrapper
+typedef struct {
+    Heap* maxHeap; // Smaller half
+    Heap* minHeap; // Larger half
+} MedianFinder;
+
+MedianFinder* medianFinderCreate() {
+    MedianFinder* obj = (MedianFinder*)malloc(sizeof(MedianFinder));
+    // Constraints say max 50,000 calls
+    obj->maxHeap = createHeap(25005, 0); 
+    obj->minHeap = createHeap(25005, 1);
+    return obj;
+}
+
+void medianFinderAddNum(MedianFinder* obj, int num) {
+    // Step 1: Add to maxHeap first, or conditionally pass to minHeap
+    if (obj->maxHeap->size == 0 || num <= obj->maxHeap->data[0]) {
+        pushHeap(obj->maxHeap, num);
+    } else {
+        pushHeap(obj->minHeap, num);
+    }
+    
+    // Step 2: Rebalance the sizes
+    if (obj->maxHeap->size > obj->minHeap->size + 1) {
+        pushHeap(obj->minHeap, popHeap(obj->maxHeap));
+    } else if (obj->minHeap->size > obj->maxHeap->size) {
+        pushHeap(obj->maxHeap, popHeap(obj->minHeap));
+    }
+}
+
+double medianFinderFindMedian(MedianFinder* obj) {
+    if (obj->maxHeap->size > obj->minHeap->size) {
+        return (double)obj->maxHeap->data[0];
+    } else {
+        return (obj->maxHeap->data[0] + obj->minHeap->data[0]) / 2.0;
+    }
+}
+
+void medianFinderFree(MedianFinder* obj) {
+    free(obj->maxHeap->data);
+    free(obj->maxHeap);
+    free(obj->minHeap->data);
+    free(obj->minHeap);
+    free(obj);
+}
