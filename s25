@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Node structure to form a linked list of characters within each frequency bucket
+typedef struct CharNode {
+    char ch;
+    struct CharNode* next;
+} CharNode;
+
+char* frequencySort(char* s) {
+    int n = strlen(s);
+    if (n <= 1) return s;
+
+    // Step 1: Count character frequencies (ASCII table array size 128)
+    int freq[128] = {0};
+    for (int i = 0; i < n; i++) {
+        freq[(unsigned char)s[i]]++;
+    }
+
+    // Step 2: Initialize buckets up to the max possible frequency (string length 'n')
+    CharNode** buckets = (CharNode**)calloc(n + 1, sizeof(CharNode*));
+
+    // Group characters into buckets based on their frequencies
+    for (int i = 0; i < 128; i++) {
+        if (freq[i] > 0) {
+            int currentFreq = freq[i];
+            
+            // Create a new node and push it to the head of that frequency's list
+            CharNode* newNode = (CharNode*)malloc(sizeof(CharNode));
+            newNode->ch = (char)i;
+            newNode->next = buckets[currentFreq];
+            buckets[currentFreq] = newNode;
+        }
+    }
+
+    // Step 3: Rebuild the string by iterating through buckets backwards
+    char* result = (char*)malloc((n + 1) * sizeof(char));
+    int index = 0;
+
+    for (int f = n; f > 0; f--) {
+        CharNode* curr = buckets[f];
+        while (curr != NULL) {
+            // Append the character 'f' times (its frequency)
+            for (int i = 0; i < f; i++) {
+                result[index++] = curr->ch;
+            }
+            
+            // Free the node during iteration to prevent memory leaks
+            CharNode* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+    }
+    result[index] = '\0'; // Null-terminate the string
+
+    free(buckets);
+    return result;
+}
