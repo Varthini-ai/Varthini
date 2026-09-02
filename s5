@@ -1,0 +1,77 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Comparison function for sorting
+int compare(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+// Backtracking helper function
+void backtrack(int* nums, int numsSize, int* current, int* visited, 
+               int*** result, int* returnSize, int** returnColumnSizes, int* capacity, int depth) {
+    
+    // Base Case: If the current permutation is complete
+    if (depth == numsSize) {
+        // Expand capacity of results array if full
+        if (*returnSize >= *capacity) {
+            *capacity *= 2;
+            *result = (int**)realloc(*result, (*capacity) * sizeof(int*));
+            *returnColumnSizes = (int*)realloc(*returnColumnSizes, (*capacity) * sizeof(int));
+        }
+        
+        // Save the valid permutation
+        (*result)[*returnSize] = (int*)malloc(numsSize * sizeof(int));
+        memcpy((*result)[*returnSize], current, numsSize * sizeof(int));
+        (*returnColumnSizes)[*returnSize] = numsSize;
+        (*returnSize)++;
+        return;
+    }
+    
+    for (int i = 0; i < numsSize; i++) {
+        // Skip if this element is already used in the current path
+        if (visited[i]) continue;
+        
+        // Skip duplicates: If current number matches previous number,
+        // and the previous number wasn't visited in this branch yet, skip to avoid duplicate trees.
+        if (i > 0 && nums[i] == nums[i-1] && !visited[i-1]) continue;
+        
+        // Take element
+        visited[i] = 1;
+        current[depth] = nums[i];
+        
+        // Explore
+        backtrack(nums, numsSize, current, visited, result, returnSize, returnColumnSizes, capacity, depth + 1);
+        
+        // Clean up / Backtrack
+        visited[i] = 0;
+    }
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned arrays and *returnColumnSizes array must be malloced, assume caller calls free().
+ */
+int** permuteUnique(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {
+    *returnSize = 0;
+    int capacity = 10; // Initial dynamic array capacity
+    
+    int** result = (int**)malloc(capacity * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(capacity * sizeof(int));
+    
+    // Sort the numbers to bring duplicates together
+    qsort(nums, numsSize, sizeof(int), compare);
+    
+    int* current = (int*)malloc(numsSize * sizeof(int));
+    int* visited = (int*)calloc(numsSize, sizeof(int));
+    
+    // Start generating permutations
+    backtrack(nums, numsSize, current, visited, &result, returnSize, returnColumnSizes, &capacity, 0);
+    
+    // Clean up temporary tracking arrays
+    free(current);
+    free(visited);
+    
+    return result;
+}
