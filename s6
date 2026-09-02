@@ -1,0 +1,109 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define HASH_SIZE 2047 // Prime number for hash table capacity
+
+// Node for handling hash table chaining
+typedef struct HashNode {
+    char* sorted_key;
+    int group_index;
+    struct HashNode* next;
+} HashNode;
+
+// Simple string sorting helper function
+int compareChars(const void* a, const void* b) {
+    return (*(char*)a - *(char*)b);
+}
+
+// Polynomial rolling hash function for strings
+unsigned int getHash(const char* str) {
+    unsigned int hash = 0;
+    while (*str) {
+        hash = (hash * 31) + *str;
+        str++;
+    }
+    return hash % HASH_SIZE;
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned arrays and *returnColumnSizes array must be malloced.
+ */
+char*** groupAnagrams(char** strs, int strsSize, int* returnSize, int** returnColumnSizes) {
+    // Allocate maximum possible capacity for our groups
+    char*** result = (char***)malloc(strsSize * sizeof(char**));
+    *returnColumnSizes = (int*)malloc(strsSize * sizeof(int));
+    
+    // Track current capacity and dynamic tracking for each row
+    int* rowCapacities = (int*)malloc(strsSize * sizeof(int));
+    int totalGroups = 0;
+
+    // Initialize the hash table
+    HashNode* hashTable[HASH_SIZE] = {NULL};
+
+    for (int i = 0; i < strsSize; i++) {
+        // Step 1: Create the unique sorted key
+        int len = strlen(strs[i]);
+        char* sorted = (char*)malloc((len + 1) * sizeof(char));
+        strcpy(sorted, strs[i]);
+        qsort(sorted, len, sizeof(char), compareChars);
+
+        // Step 2: Compute hash and search the hash table
+        unsigned int h = getHash(sorted);
+        HashNode* curr = hashTable[h];
+        int targetGroup = -1;
+
+        while (curr != NULL) {
+            if (strcmp(curr->sorted_key, sorted) == 0) {
+                targetGroup = curr->group_index;
+                break;
+            }
+            curr = curr->next;
+        }
+
+        // Step 3: Insert into existing group or establish a new group
+        if (targetGroup != -1) {
+            // Group exists. Expand row capacity dynamically if full
+            if ((*returnColumnSizes)[targetGroup] >= rowCapacities[targetGroup]) {
+                rowCapacities[targetGroup] *= 2;
+                result[targetGroup] = (char**)realloc(result[targetGroup], rowCapacities[targetGroup] * sizeof(char*));
+            }
+            // Add string to existing row
+            result[targetGroup][(*returnColumnSizes)[targetGroup]++] = strs[i];
+            free(sorted); // Key copy not needed anymore
+        } else {
+            // Group does not exist. Initialize a new row row
+            targetGroup = totalGroups++;
+            rowCapacities[targetGroup] = 2; // Initial capacity per row
+            result[targetGroup] = (char**)malloc(rowCapacities[targetGroup] * sizeof(char*));
+            result[targetGroup][0] = strs[i];
+            (*returnColumnSizes)[targetGroup] = 1;
+
+            // Add new node into the hash table chain
+            HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+            newNode->sorted_key = sorted;
+            newNode->group_index = targetGroup;
+            newNode->next = hashTable[h];
+            hashTable[h] = newNode;
+        }
+    }
+
+    // Set output size parameters
+    *returnSize = totalGroups;
+
+    // Free the constructed hash table nodes
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = hashTable[i];
+        while (curr != NULL) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp->sorted_key);
+            free(temp);
+        }
+    }
+    free(rowCapacities);
+
+    return result;
+}
