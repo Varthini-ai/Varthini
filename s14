@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Custom comparison function for qsort
+int compare(const void* a, const void* b) {
+    char const* strA = *(char const**)a;
+    char const* strB = *(char const**)b;
+    
+    // Allocate space for concatenated combinations
+    int lenA = strlen(strA);
+    int lenB = strlen(strB);
+    char* comb1 = (char*)malloc((lenA + lenB + 1) * sizeof(char));
+    char* comb2 = (char*)malloc((lenA + lenB + 1) * sizeof(char));
+    
+    // Create "A + B"
+    strcpy(comb1, strA);
+    strcat(comb1, strB);
+    
+    // Create "B + A"
+    strcpy(comb2, strB);
+    strcat(comb2, strA);
+    
+    // Compare A+B with B+A in descending order
+    int result = strcmp(comb2, comb1);
+    
+    // Clean up temporary memory
+    free(comb1);
+    free(comb2);
+    
+    return result;
+}
+
+char* largestNumber(int* nums, int numsSize) {
+    // Array to store string representations of numbers
+    char** strNums = (char**)malloc(numsSize * sizeof(char*));
+    int totalLength = 0;
+    
+    for (int i = 0; i < numsSize; i++) {
+        strNums[i] = (char*)malloc(12 * sizeof(char)); // 10^9 fits easily in 12 chars
+        sprintf(strNums[i], "%d", nums[i]);
+        totalLength += strlen(strNums[i]);
+    }
+    
+    // Sort the string array using our custom comparator
+    qsort(strNums, numsSize, sizeof(char*), compare);
+    
+    // Edge case: If the largest number is "0", the result is just "0"
+    if (strcmp(strNums[0], "0") == 0) {
+        // Free allocated memory before returning
+        for (int i = 0; i < numsSize; i++) free(strNums[i]);
+        free(strNums);
+        
+        char* zeroResult = (char*)malloc(2 * sizeof(char));
+        strcpy(zeroResult, "0");
+        return zeroResult;
+    }
+    
+    // Allocate memory for the final output string
+    char* result = (char*)malloc((totalLength + 1) * sizeof(char));
+    result[0] = '\0'; // Start with an empty string
+    
+    // Concatenate all sorted strings
+    for (int i = 0; i < numsSize; i++) {
+        strcat(result, strNums[i]);
+        free(strNums[i]); // Free individual string buffers
+    }
+    free(strNums); // Free main string array tracking pointer
+    
+    return result;
+}
