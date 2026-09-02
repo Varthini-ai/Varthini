@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+// Helper function to split 'head' into a sublist of size 'step'.
+// Returns the head of the REMAINING trailing part of the list.
+struct ListNode* split(struct ListNode* head, int step) {
+    if (!head) return NULL;
+    
+    // Advance 'step - 1' times to find the end of this block
+    for (int i = 1; head->next && i < step; i++) {
+        head = head->next;
+    }
+    
+    struct ListNode* remainder = head->next;
+    head->next = NULL; // Disconnect the sublist block
+    return remainder;
+}
+
+// Helper function to merge two sorted lists.
+// Returns a pair: [head of merged list, tail of merged list] via pointers.
+void mergeLists(struct ListNode* l1, struct ListNode* l2, struct ListNode** headRef, struct ListNode** tailRef) {
+    struct ListNode dummy;
+    dummy.next = NULL;
+    struct ListNode* tail = &dummy;
+    
+    while (l1 && l2) {
+        if (l1->val <= l2->val) {
+            tail->next = l1;
+            l1 = l1->next;
+        } else {
+            tail->next = l2;
+            l2 = l2->next;
+        }
+        tail = tail->next;
+    }
+    
+    tail->next = l1 ? l1 : l2;
+    
+    // Find the absolute final tail node of this merged section
+    while (tail->next) {
+        tail = tail->next;
+    }
+    
+    *headRef = dummy.next;
+    *tailRef = tail;
+}
+
+struct ListNode* sortList(struct ListNode* head) {
+    if (!head || !head->next) return head;
+    
+    // First, find the total length of the linked list
+    int length = 0;
+    struct ListNode* curr = head;
+    while (curr) {
+        length++;
+        curr = curr->next;
+    }
+    
+    struct ListNode dummy;
+    dummy.next = head;
+    
+    // Iteratively merge sublists of size 1, 2, 4, 8, ...
+    for (int step = 1; step < length; step *= 2) {
+        struct ListNode* prev = &dummy;
+        curr = dummy.next;
+        
+        while (curr) {
+            struct ListNode* l1 = curr;
+            struct ListNode* remainder1 = split(l1, step);
+            
+            struct ListNode* l2 = remainder1;
+            struct ListNode* remainder2 = split(l2, step);
+            
+            // Step to the start of the next pair block
+            curr = remainder2; 
+            
+            // Merge the two chunks and stitch them back into the main list
+            struct ListNode* mergedHead = NULL;
+            struct ListNode* mergedTail = NULL;
+            mergeLists(l1, l2, &mergedHead, &mergedTail);
+            
+            prev->next = mergedHead;
+            prev = mergedTail;
+        }
+    }
+    
+    return dummy.next;
+}
