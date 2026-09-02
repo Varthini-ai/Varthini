@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define OFFSET 10000
+#define RANGE 20001
+
+int findKthLargest(int* nums, int numsSize, int k) {
+    // Frequency array initialized to 0
+    int count[RANGE] = {0};
+    
+    // Step 1: Populate counts of each number with offset mapping
+    for (int i = 0; i < numsSize; i++) {
+        count[nums[i] + OFFSET]++;
+    }
+    
+    // Step 2: Iterate backwards from highest value to find the k-th largest
+    int accumulatedCount = 0;
+    for (int i = RANGE - 1; i >= 0; i--) {
+        accumulatedCount += count[i];
+        
+        // If our accumulated total reaches or exceeds k, we've found our answer
+        if (accumulatedCount >= k) {
+            return i - OFFSET; // Revert the offset transformation
+        }
+    }
+    
+    return -1; // Fallback
+}
