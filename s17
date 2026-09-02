@@ -1,0 +1,132 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+// Structure to easily manage a Skyline key point
+typedef struct {
+    int x;
+    int y;
+} KeyPoint;
+
+// Helper function to append a point to the skyline while filtering duplicates
+void appendPoint(KeyPoint* res, int* size, int x, int y) {
+    // If the new height matches the last recorded height, skip it (redundant horizontal line)
+    if (*size > 0 && res[*size - 1].y == y) {
+        return;
+    }
+    // If the x coordinate matches, update the height to the maximum possible value
+    if (*size > 0 && res[*size - 1].x == x) {
+        res[*size - 1].y = MAX(res[*size - 1].y, y);
+        return;
+    }
+    res[*size].x = x;
+    res[*size].y = y;
+    (*size)++;
+}
+
+// Merges two independent skylines together
+KeyPoint* mergeSkylines(KeyPoint* sky1, int size1, KeyPoint* sky2, int size2, int* returnSize) {
+    KeyPoint* res = (KeyPoint*)malloc((size1 + size2) * sizeof(KeyPoint));
+    int i = 0, j = 0, resSize = 0;
+    int h1 = 0, h2 = 0; // Tracks current height of sky1 and sky2
+
+    while (i < size1 && j < size2) {
+        int x = 0, y = 0;
+        if (sky1[i].x < sky2[j].x) {
+            x = sky1[i].x;
+            h1 = sky1[i].y;
+            y = MAX(h1, h2);
+            i++;
+        } else if (sky1[i].x > sky2[j].x) {
+            x = sky2[j].x;
+            h2 = sky2[j].y;
+            y = MAX(h1, h2);
+            j++;
+        } else { // Elements share the same x-coordinate
+            x = sky1[i].x;
+            h1 = sky1[i].y;
+            h2 = sky2[j].y;
+            y = MAX(h1, h2);
+            i++;
+            j++;
+        }
+        appendPoint(res, &resSize, x, y);
+    }
+
+    // Append remaining points from sky1
+    while (i < size1) {
+        appendPoint(res, &resSize, sky1[i].x, sky1[i].y);
+        i++;
+    }
+
+    // Append remaining points from sky2
+    while (j < size2) {
+        appendPoint(res, &resSize, sky2[j].x, sky2[j].y);
+        j++;
+    }
+
+    *returnSize = resSize;
+    return res;
+}
+
+// Recursive function to handle the divide and conquer split logic
+KeyPoint* getSkylineRecursive(int** buildings, int start, int end, int* returnSize) {
+    if (start > end) {
+        *returnSize = 0;
+        return NULL;
+    }
+    
+    // Base Case: Only 1 building
+    if (start == end) {
+        KeyPoint* res = (KeyPoint*)malloc(2 * sizeof(KeyPoint));
+        res[0].x = buildings[start][0]; // Left Edge
+        res[0].y = buildings[start][2]; // Height
+        res[1].x = buildings[start][1]; // Right Edge
+        res[1].y = 0;                  // Drops to ground
+        *returnSize = 2;
+        return res;
+    }
+
+    int mid = start + (end - start) / 2;
+    int size1 = 0, size2 = 0;
+    
+    KeyPoint* sky1 = getSkylineRecursive(buildings, start, mid, &size1);
+    KeyPoint* sky2 = getSkylineRecursive(buildings, mid + 1, end, &size2);
+    
+    KeyPoint* merged = mergeSkylines(sky1, size1, sky2, size2, returnSize);
+    
+    free(sky1);
+    free(sky2);
+    return merged;
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ */
+int** getSkyline(int** buildings, int buildingsSize, int* buildingsColSize, int* returnSize, int** returnColumnSizes) {
+    if (buildingsSize == 0) {
+        *returnSize = 0;
+        *returnColumnSizes = NULL;
+        return NULL;
+    }
+
+    int totalPoints = 0;
+    KeyPoint* points = getSkylineRecursive(buildings, 0, buildingsSize - 1, &totalPoints);
+
+    // Convert our KeyPoint structures to LeetCode's multi-dimensional array output format
+    int** result = (int**)malloc(totalPoints * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(totalPoints * sizeof(int));
+    *returnSize = totalPoints;
+
+    for (int i = 0; i < totalPoints; i++) {
+        result[i] = (int*)malloc(2 * sizeof(int));
+        result[i][0] = points[i].x;
+        result[i][1] = points[i].y;
+        (*returnColumnSizes)[i] = 2;
+    }
+
+    free(points);
+    return result;
+}
