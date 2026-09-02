@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int hIndex(int* citations, int citationsSize) {
+    int n = citationsSize;
+    
+    // Allocate bucket array initialized to 0
+    int* buckets = (int*)calloc(n + 1, sizeof(int));
+    
+    // Step 1: Populate the buckets
+    for (int i = 0; i < n; i++) {
+        if (citations[i] >= n) {
+            buckets[n]++;
+        } else {
+            buckets[citations[i]]++;
+        }
+    }
+    
+    // Step 2: Iterate backwards to find the h-index
+    int accumulatedPapers = 0;
+    for (int h = n; h >= 0; h--) {
+        accumulatedPapers += buckets[h];
+        
+        // If the number of papers with at least h citations is >= h, we found our h-index
+        if (accumulatedPapers >= h) {
+            free(buckets); // Clean up allocated memory
+            return h;
+        }
+    }
+    
+    free(buckets);
+    return 0;
+}
