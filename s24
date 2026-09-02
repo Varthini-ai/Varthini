@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to represent a flight ticket with an active flag
+typedef struct {
+    char from[4];
+    char to[4];
+    int used;
+} Ticket;
+
+// Structure to keep track of adjacency ranges in our sorted ticket array
+typedef struct {
+    char airport[4];
+    int start_idx;
+    int end_idx;
+} AirportMap;
+
+// Sort tickets primarily by origin, secondarily by destination (lexicographical order)
+int compareTickets(const void* a, const void* b) {
+    Ticket* t1 = (Ticket*)a;
+    Ticket* t2 = (Ticket*)b;
+    int cmp = strcmp(t1->from, t2->from);
+    if (cmp != 0) return cmp;
+    return strcmp(t1->to, t2->to);
+}
+
+// Global/helper tracking array for our path reconstruction
+char** ans;
+int ansSize;
+
+// Hierholzer's Algorithm DFS pass
+void dfs(const char* curr_airport, Ticket* tickets, AirportMap* map, int mapSize) {
+    // Find the current airport's range in the sorted tickets array
+    int start = -1, end = -1;
+    for (int i = 0; i < mapSize; i++) {
+        if (strcmp(map[i].airport, curr_airport) == 0) {
+            start = map[i].start_idx;
+            end = map[i].end_idx;
+            break;
+        }
+    }
+
+    if (start != -1) {
+        // Run through all outgoing flights from this airport
+        for (int i = start; i <= end; i++) {
+            if (!tickets[i].used) {
+                tickets[i].used = 1; // Burn the edge
+                dfs(tickets[i].to, tickets, map, mapSize);
+            }
+        }
+    }
+    
+    // Post-order add: write to our path buffer when stuck/done
+    ans[ansSize] = (char*)malloc(4 * sizeof(char));
+    strcpy(ans[ansSize], curr_airport);
+    ansSize++;
+}
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ * *returnSize is the size of the returned array.
+ */
+char*** findItinerary(char*** tickets_input, int ticketsSize, int* ticketsColSize, int* returnSize) {
+    // Flatten incoming string structure to a localized clean array
+    Ticket* tickets = (Ticket*)malloc(ticketsSize * sizeof(Ticket));
+    for (int i = 0; i < ticketsSize; i++) {
+        strcpy(tickets[i].from, tickets_input[i][0]);
+        strcpy(tickets[i].to, tickets_input[i][1]);
+        tickets[i].used = 0;
+    }
+
+    // Step 1: Sort tickets alphabetically
+    qsort(tickets, ticketsSize, sizeof(Ticket), compareTickets);
+
+    // Step 2: Build an index map to grab outgoing flights quickly
+    AirportMap* map = (AirportMap*)malloc(ticketsSize * sizeof(AirportMap));
+    int mapSize = 0;
+    
+    for (int i = 0; i < ticketsSize; i++) {
+        if (mapSize == 0 || strcmp(map[mapSize - 1].airport, tickets[i].from) != 0) {
+            strcpy(map[mapSize].airport, tickets[i].from);
+            map[mapSize].start_idx = i;
+            map[mapSize].end_idx = i;
+            mapSize++;
+        } else {
+            map[mapSize - 1].end_idx = i;
+        }
+    }
+
+    // Allocate memory for the itinerary path (number of nodes = tickets + 1)
+    ans = (char**)malloc((ticketsSize + 1) * sizeof(char*));
+    ansSize = 0;
+
+    // Step 3: Compute Eulerian Path using DFS
+    dfs("JFK", tickets, map, mapSize);
+
+    // Step 4: Reverse the post-order sequence to obtain correct forward order
+    char*** result = (char***)malloc(ansSize * sizeof(char*));
+    for (int i = 0; i < ansSize; i++) {
+        result[i] = ans[ansSize - 1 - i];
+    }
+
+    // Clean up temporary variables
+    free(ans);
+    free(tickets);
+    free(map);
+
+    *returnSize = ansSize;
+    return result;
+}
