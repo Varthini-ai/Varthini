@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ * *returnSize is the size of the returned array.
+ */
+int* majorityElement(int* nums, int numsSize, int* returnSize) {
+    int candidate1 = 0, candidate2 = 0;
+    int count1 = 0, count2 = 0;
+
+    // First Pass: Find the top two potential candidates
+    for (int i = 0; i < numsSize; i++) {
+        if (nums[i] == candidate1) {
+            count1++;
+        } else if (nums[i] == candidate2) {
+            count2++;
+        } else if (count1 == 0) {
+            candidate1 = nums[i];
+            count1 = 1;
+        } else if (count2 == 0) {
+            candidate2 = nums[i];
+            count2 = 1;
+        } else {
+            // Three distinct numbers clash; decrement both votes
+            count1--;
+            count2--;
+        }
+    }
+
+    // Second Pass: Manually verify the actual frequency of the two candidates
+    int actualCount1 = 0;
+    int actualCount2 = 0;
+    for (int i = 0; i < numsSize; i++) {
+        if (nums[i] == candidate1) actualCount1++;
+        else if (nums[i] == candidate2) actualCount2++; 
+        // Using "else if" prevents double counting if candidate1 == candidate2 initially
+    }
+
+    // Allocate results array (maximum 2 elements possible)
+    int* result = (int*)malloc(2 * sizeof(int));
+    int resultCount = 0;
+    int targetThreshold = numsSize / 3;
+
+    if (actualCount1 > targetThreshold) {
+        result[resultCount++] = candidate1;
+    }
+    if (actualCount2 > targetThreshold) {
+        result[resultCount++] = candidate2;
+    }
+
+    *returnSize = resultCount;
+    return result;
+}
