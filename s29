@@ -1,0 +1,30 @@
+#include <stdlib.h>
+
+// Forward declaration matching official platform expectations
+int countStudents(int* students, int studentsSize, int* sandwiches, int sandwichesSize);
+
+int countStudents(int* students, int studentsSize, int* sandwiches, int sandwichesSize) {
+    // Array to store counts: count[0] for circular, count[1] for square
+    int count[2] = {0, 0};
+    
+    // Tally up student preferences
+    for (int i = 0; i < studentsSize; i++) {
+        count[students[i]]++;
+    }
+    
+    // Iterate through the sandwich stack
+    for (int i = 0; i < sandwichesSize; i++) {
+        int current_sandwich = sandwiches[i];
+        
+        // If no remaining students want this type of sandwich, the process stops
+        if (count[current_sandwich] == 0) {
+            return sandwichesSize - i;
+        }
+        
+        // Serve the sandwich to one student
+        count[current_sandwich]--;
+    }
+    
+    // All students were successfully served
+    return 0;
+}
