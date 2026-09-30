@@ -1,0 +1,17 @@
+#include <stdlib.h>
+
+// Forward declaration matching official platform expectations
+int findTheWinner(int n, int k);
+
+int findTheWinner(int n, int k) {
+    // Base case: if there is 1 person, the winner's 0-indexed position is 0
+    int winner = 0;
+    
+    // Bottom-up iteration to find the winner for up to 'n' friends
+    for (int i = 2; i <= n; i++) {
+        winner = (winner + k) % i;
+    }
+    
+    // Convert the 0-indexed result back to a 1-indexed friend number
+    return winner + 1;
+}
