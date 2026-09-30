@@ -1,0 +1,122 @@
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_VAL 100005
+
+typedef struct {
+    int m;
+    int k;
+    int* queue;          // Circular array acting as our sliding window stream
+    int q_head;
+    int q_size;
+    int total_elements;  // Tracking absolute count of elements added
+    
+    long long bit_count[MAX_VAL]; // Fenwick tree for frequency counts
+    long long bit_sum[MAX_VAL];   // Fenwick tree for value sums
+} MKAverage;
+
+// Helper: Add value into a Fenwick tree
+void bit_update(long long* bit, int idx, long long val) {
+    for (; idx < MAX_VAL; idx += idx & -idx) {
+        bit[idx] += val;
+    }
+}
+
+// Helper: Read prefix sum from a Fenwick tree
+long long bit_query(long long* bit, int idx) {
+    long long sum = 0;
+    for (; idx > 0; idx -= idx & -idx) {
+        sum += bit[idx];
+    }
+    return sum;
+}
+
+// Helper: Binary lifting to find the element value at a specific cumulative frequency rank
+int find_val_by_rank(long long* bit_count, long long rank) {
+    int idx = 0;
+    long long current_count = 0;
+    // 2^17 = 131072, sufficient to cover MAX_VAL (100005)
+    for (int i = 1 << 16; i > 0; i >>= 1) {
+        if (idx + i < MAX_VAL && current_count + bit_count[idx + i] < rank) {
+            idx += i;
+            current_count += bit_count[idx];
+        }
+    }
+    return idx + 1;
+}
+
+// Constructor
+MKAverage* mKAverageCreate(int m, int k) {
+    MKAverage* obj = (MKAverage*)malloc(sizeof(MKAverage));
+    obj->m = m;
+    obj->k = k;
+    obj->queue = (int*)malloc(m * sizeof(int));
+    obj->q_head = 0;
+    obj->q_size = 0;
+    obj->total_elements = 0;
+    memset(obj->bit_count, 0, sizeof(obj->bit_count));
+    memset(obj->bit_sum, 0, sizeof(obj->bit_sum));
+    return obj;
+}
+
+// Add element to the stream window
+void mKAverageAddElement(MKAverage* obj, int num) {
+    obj->total_elements++;
+    
+    // If window is full, remove the oldest element from Fenwick Trees
+    if (obj->q_size == obj->m) {
+        int old_num = obj->queue[obj->q_head];
+        bit_update(obj->bit_count, old_num, -1);
+        bit_update(obj->bit_sum, old_num, -old_num);
+        obj->q_head = (obj->q_head + 1) % obj->m;
+        obj->q_size--;
+    }
+    
+    // Insert new element into the tracking arrays
+    int tail = (obj->q_head + obj->q_size) % obj->m;
+    obj->queue[tail] = num;
+    obj->q_size++;
+    
+    bit_update(obj->bit_count, num, 1);
+    bit_update(obj->bit_sum, num, num);
+}
+
+// Calculate the sum of elements up to a given rank index
+long long get_sum_of_first_n_elements(MKAverage* obj, int n) {
+    if (n == 0) return 0;
+    
+    // Find the value threshold of the n-th element rank
+    int val = find_val_by_rank(obj->bit_count, n);
+    
+    // Get sums and counts strictly below this value threshold
+    long long count_below = bit_query(obj->bit_count, val - 1);
+    long long sum_below = bit_query(obj->bit_sum, val - 1);
+    
+    // The remaining count needed must be filled precisely by 'val'
+    long long remaining = n - count_below;
+    return sum_below + remaining * val;
+}
+
+// Calculate the structural middle window average value
+int mKAverageCalculateMKAverage(MKAverage* obj) {
+    if (obj->total_elements < obj->m) {
+        return -1;
+    }
+    
+    // Total sum up to rank (m - k)
+    long long top_k_removed_sum = get_sum_of_first_n_elements(obj, obj->m - obj->k);
+    // Total sum up to rank k
+    long long bottom_k_removed_sum = get_sum_of_first_n_elements(obj, obj->k);
+    
+    // The target middle sum is the difference between these ranges
+    long long middle_sum = top_k_removed_sum - bottom_k_removed_sum;
+    int middle_elements_count = obj->m - 2 * obj->k;
+    
+    return (int)(middle_sum / middle_elements_count);
+}
+
+// Destructor
+void mKAverageFree(MKAverage* obj) {
+    free(obj->queue);
+    free(obj);
+}
